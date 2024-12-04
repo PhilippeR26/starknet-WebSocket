@@ -1,16 +1,15 @@
 "use client";
 import { useEffect, useState, useRef, type MutableRefObject } from 'react';
-import { ProviderInterface, GetBlockResponse, WebSocketChannel, WSSubscriptions, } from "starknet";
+import { WebSocketChannel, WSSubscriptions, } from "starknet";
 import { useStoreBlock } from "./blockContext";
 import { Text, Separator } from "@chakra-ui/react";
 import styles from '../../../page.module.css'
 import { BLOCK_HEADER, RESOURCE_PRICE, L1_DA_MODE, SubscriptionNewHeadsResponse } from "@starknet-io/types-js";
 import { WSurl } from '@/utils/constants';
-import { WebSocket } from "isows";
 
 
 export default function BlockDisplay() {
-  // context
+  // block context
   const blockFromContext = useStoreBlock(state => state.dataBlock);
   const setBlockData = useStoreBlock((state) => state.setBlockData);
 
@@ -23,8 +22,8 @@ export default function BlockDisplay() {
       const myWS = new WebSocketChannel({ nodeUrl: WSurl });
       if (myWS) {
         try {
-          const state: WebSocket = await myWS.waitForConnection();
-          console.log("WebSocketChannel connected =", myWS.isConnected(), "state =", state);
+          const state: number = await myWS.waitForConnection();
+          console.log("WebSocketChannel connected =", myWS.isConnected(), "state =", state === (WebSocket.OPEN) ? "OPEN" : "NOT OPEN");
         }
         catch (err: any) {
           console.log("Error WS connection =", err);
@@ -56,7 +55,7 @@ export default function BlockDisplay() {
         }
       }
       else {
-        console.log("Failed to create a WebSocketChannel instance.");
+        console.log("No WebSocketChannel instance.");
       }
     };
     initWS();
@@ -69,11 +68,11 @@ export default function BlockDisplay() {
           console.log("stop subscription newHeads...");
           try {
             const newHeadsId = myWS.subscriptions.get(WSSubscriptions.NEW_HEADS);
-            console.log(". close ID =", newHeadsId);
+            console.log("Close newHead ID =", newHeadsId);
             const status: boolean = await myWS.unsubscribeNewHeads();
             console.log("unsubscribe newHeads =", status);
             const subscriptionId = await myWS.waitForUnsubscription(newHeadsId);
-            console.log("Unsubscribed newHeads completed", { subscriptionId });
+            console.log("Unsubscribe newHeads completed", { subscriptionId });
           } catch (err: any) {
             console.log("error Unsubscribe", err);
           };
@@ -113,6 +112,5 @@ export default function BlockDisplay() {
       <Separator />
       {myNewHeadsID && <Text>newHeads {myNewHeadsID}</Text>}
     </>
-
   )
 }
